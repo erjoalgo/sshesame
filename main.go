@@ -19,12 +19,23 @@ func main() {
 	port := flag.Uint("port", 2022, "the port number to listen on")
 	jsonLogging := flag.Bool("json_logging", false, "enable logging in JSON")
 	serverVersion := flag.String("server_version", "SSH-2.0-sshesame", "The version identification of the server (RFC 4253 section 4.2 requires that this string start with \"SSH-2.0-\")")
+	logFile := flag.String("log_file", "", "The log file location. Defaults to system logging")
 	flag.Parse()
 
 	if *jsonLogging {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
 
+	if *logFile != ""  {
+		// You could set this to any `io.Writer` such as a file
+		file, err := os.OpenFile(*logFile,
+			os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err == nil {
+			log.Out = file
+		} else {
+			log.Info("Failed to log to file, using default stderr")
+		}
+	}
 	var key ssh.Signer
 	var err error
 	if *hostKey != "" {
